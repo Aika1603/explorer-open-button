@@ -1,5 +1,3 @@
-## Jawabannya: **BISA**
-
 Solusi *Custom Protocol Handler* ini berbasis **Windows Registry**, yang merupakan fitur inti dari sistem operasi Windows. Jadi, cara ini kompatibel dengan:
 
 - Windows 7
