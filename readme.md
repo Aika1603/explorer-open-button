@@ -28,30 +28,59 @@ Set objShell = CreateObject("WScript.Shell")
 If WScript.Arguments.Count > 0 Then
     fullUrl = WScript.Arguments(0)
     
-    ' 1. Hapus protokol "buka-nas://" (11 karakter)
-    cleanPath = Mid(fullUrl, 12)
+    ' 1. Hapus bagian "buka-nas:" (9 karakter pertama)
+    ' Kita tidak menghapus // dulu untuk mengantisipasi jumlah slash yang variatif
+    rawPath = Mid(fullUrl, 10)
     
-    ' 2. Hapus trailing slash jika ada
-    If Right(cleanPath, 1) = "/" Then
-        cleanPath = Left(cleanPath, Len(cleanPath) - 1)
+    ' 2. Bersihkan semua slash di awal string (bisa // atau /// atau /////)
+    Do While Left(rawPath, 1) = "/" Or Left(rawPath, 1) = "\"
+        rawPath = Mid(rawPath, 2)
+    Loop
+    
+    ' 3. Hapus slash di akhir (trailing slash) jika ada
+    If Right(rawPath, 1) = "/" Then
+        rawPath = Left(rawPath, Len(rawPath) - 1)
     End If
     
-    ' 3. Ubah semua Forward Slash (/) jadi Backslash (\)
-    windowsPath = Replace(cleanPath, "/", "\")
+    ' 4. Ubah semua Forward Slash (/) jadi Backslash (\)
+    windowsPath = Replace(rawPath, "/", "\")
     
-    ' 4. LOGIC BARU: Cek apakah ini Drive Letter (Q:) atau IP Address
-    ' Cek karakter ke-2. Jika titik dua (:), berarti ini Drive Letter (misal C: atau Q:)
-    If Mid(windowsPath, 2, 1) = ":" Then
-        ' Jika Drive Letter, JANGAN tambah \\ di depan
+    ' 5. LOGIC PERBAIKAN: Deteksi Drive Letter
+    ' Pola 1: Sudah ada titik dua (Contoh: Q:\Jersey) -> Aman
+    ' Pola 2: Titik dua hilang (Contoh: Q\Jersey) -> Harus diperbaiki
+    
+    firstChar = Left(windowsPath, 1)
+    secondChar = Mid(windowsPath, 2, 1)
+    
+    If secondChar = ":" Then
+        ' KASUS A: Format sudah benar (Q:\...)
         finalPath = windowsPath
+        
+    ElseIf IsAlpha(firstChar) And (secondChar = "\" Or secondChar = "") Then
+        ' KASUS B: Titik dua hilang (Q\...)
+        ' Kita pasang lagi titik duanya secara paksa
+        finalPath = firstChar & ":" & Mid(windowsPath, 2)
+        
     Else
-        ' Jika bukan Drive Letter (IP/Hostname), TAMBAH \\ di depan
+        ' KASUS C: Ini IP Address atau Hostname (192.168...)
+        ' Tambahkan \\ di depan
         finalPath = "\\" & windowsPath
     End If
     
-    ' 5. Eksekusi Explorer
+    ' 6. Eksekusi Explorer
     objShell.Run "explorer.exe " & finalPath
 End If
+
+' Fungsi Helper: Cek apakah karakter adalah Huruf (A-Z)
+Function IsAlpha(strChar)
+    IsAlpha = False
+    If Len(strChar) > 0 Then
+        asciiVal = Asc(UCase(strChar))
+        If asciiVal >= 65 And asciiVal <= 90 Then
+            IsAlpha = True
+        End If
+    End If
+End Function
 ```
 
 ---
