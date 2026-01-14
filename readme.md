@@ -93,6 +93,14 @@ Sekarang di kode React/Blade/HTML kamu, format link-nya harus seperti ini:
 </a>
 ```
 
+atau 
+
+```html
+<a href="buka-nas://Q:/Jersey/{{ $kode_produk }}">
+   <button>Buka Folder Produk</button>
+</a>
+```
+
 ---
 
 ### Apa yang akan terjadi di Windows 10/11? (Penting!)
