@@ -25,27 +25,31 @@ On Error Resume Next
 
 Set objShell = CreateObject("WScript.Shell")
 
-' Ambil argumen dari browser (misal: buka-nas://192.168.1.50/products/A001)
 If WScript.Arguments.Count > 0 Then
     fullUrl = WScript.Arguments(0)
     
-    ' 1. Hapus protokol "buka-nas://" (panjangnya 11 karakter)
-    ' Kita ambil substring mulai dari karakter ke-12
+    ' 1. Hapus protokol "buka-nas://" (11 karakter)
     cleanPath = Mid(fullUrl, 12)
     
-    ' 2. Jika ada trailing slash di akhir, hapus (opsional, biar rapi)
+    ' 2. Hapus trailing slash jika ada
     If Right(cleanPath, 1) = "/" Then
         cleanPath = Left(cleanPath, Len(cleanPath) - 1)
     End If
     
-    ' 3. Ubah semua Forward Slash (/) jadi Backslash (\) ala Windows
+    ' 3. Ubah semua Forward Slash (/) jadi Backslash (\)
     windowsPath = Replace(cleanPath, "/", "\")
     
-    ' 4. Tambahkan double backslash (\\) di depan untuk format Network Share
-    finalPath = "\\" & windowsPath
+    ' 4. LOGIC BARU: Cek apakah ini Drive Letter (Q:) atau IP Address
+    ' Cek karakter ke-2. Jika titik dua (:), berarti ini Drive Letter (misal C: atau Q:)
+    If Mid(windowsPath, 2, 1) = ":" Then
+        ' Jika Drive Letter, JANGAN tambah \\ di depan
+        finalPath = windowsPath
+    Else
+        ' Jika bukan Drive Letter (IP/Hostname), TAMBAH \\ di depan
+        finalPath = "\\" & windowsPath
+    End If
     
     ' 5. Eksekusi Explorer
-    ' Hasil akhir command: explorer.exe \\192.168.1.50\products\A001
     objShell.Run "explorer.exe " & finalPath
 End If
 ```
